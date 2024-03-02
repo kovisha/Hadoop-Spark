@@ -1,0 +1,62 @@
+# Table creation
+
+CREATE EXTERNAL TABLE delay_flights ( 
+Id INT, 
+Year INT,
+Month INT, 
+DayofMonth INT, 
+DayOfWeek INT, 
+DepTime INT, 
+CRSDepTime INT, 
+ArrTime INT,
+CRSArrTime INT,
+UniqueCarrier STRING, 
+FlightNum INT,
+TailNum STRING,
+ActualElapsedTime INT,
+CRSElapsedTime INT,
+AirTime INT,
+ArrDelay DOUBLE,
+DepDelay DOUBLE,
+Origin STRING,
+Dest STRING,
+Distance INT,
+TaxiIn INT,
+TaxiOut INT,
+Cancelled INT,
+CancellationCode STRING,
+Diverted DOUBLE,
+CarrierDelay INT,
+WeatherDelay INT,
+NASDelay INT,
+SecurityDelay INT,
+LateAircraftDelay INT
+) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LOCATION 's3://airlinesdelaydatabucket/HiveSession/';
+
+
+
+LOAD DATA INPATH 's3://airlinesdelaydatabucket/DataSource/DelayedFlights.csv' OVERWRITE INTO TABLE delay_flights;
+
+# Hadoop - HiveQL
+
+SELECT Year, avg((carrierdelay/arrdelay) * 100) as Year_wise_carrier_delay from delay_flights WHERE year BETWEEN 2003 AND 2010 GROUP BY year ORDER BY year DESC;
+
+SELECT Year, avg((nasdelay/arrDelay) * 100) as Year_wise_nas_delay from delay_flights WHERE year BETWEEN 2003 AND 2010 GROUP BY year ORDER BY year DESC;
+
+SELECT Year, avg((WeatherDelay/arrDelay) * 100) as Year_wise_weather_delay from delay_flights WHERE year BETWEEN 2003 AND 2010 GROUP BY year ORDER BY year DESC;
+
+SELECT Year, avg((LateAircraftDelay/arrDelay) * 100) as Year_wise_LateAircraft_delay from delay_flights WHERE year BETWEEN 2003 AND 2010 GROUP BY year ORDER BY year DESC;
+
+SELECT Year, avg((SecurityDelay/arrDelay) * 100) as Year_wise_security_delay from delay_flights WHERE year BETWEEN 2003 AND 2010 GROUP BY year ORDER BY year DESC;
+
+# Spark - SQL
+
+val result1 = spark.sql("SELECT _c1 as Year, avg((_c25/_c15) * 100) as Year_wise_carrier_delay from delay_flights WHERE _c1 BETWEEN 2003 AND 2010 GROUP BY _c1 ORDER BY _c1 DESC").show()
+
+val result2 = spark.sql("SELECT _c1 as Year, avg((_c27/_c15) * 100) as Year_wise_NAS_delay from delay_flights WHERE _c1 BETWEEN 2003 AND 2010 GROUP BY _c1 ORDER BY _c1 DESC").show()
+
+val result3 = spark.sql("SELECT _c1 as Year, avg((_c26/_c15) * 100) as Year_wise_weather_delay from delay_flights WHERE _c1 BETWEEN 2003 AND 2010 GROUP BY _c1 ORDER BY _c1 DESC").show()
+
+val result4 = spark.sql("SELECT _c1 as Year, avg((_c29/_c15) * 100) as Year_wise_late_aircraft_delay from delay_flights WHERE _c1 BETWEEN 2003 AND 2010 GROUP BY _c1 ORDER BY _c1 DESC").show()
+
+val result5 = spark.sql("SELECT _c1 as Year, avg((_c28/_c15) * 100) as Year_wise_security_delay from delay_flights WHERE _c1 BETWEEN 2003 AND 2010 GROUP BY _c1 ORDER BY _c1 DESC").show()
