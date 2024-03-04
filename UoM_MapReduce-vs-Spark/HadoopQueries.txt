@@ -1,0 +1,52 @@
+DROP TABLE IF EXISTS delay_flights;
+
+# Table creation
+
+CREATE EXTERNAL TABLE delay_flights ( 
+Id INT, 
+Year INT,
+Month INT, 
+DayofMonth INT, 
+DayOfWeek INT, 
+DepTime INT, 
+CRSDepTime INT, 
+ArrTime INT,
+CRSArrTime INT,
+UniqueCarrier STRING, 
+FlightNum INT,
+TailNum STRING,
+ActualElapsedTime INT,
+CRSElapsedTime INT,
+AirTime INT,
+ArrDelay DOUBLE,
+DepDelay DOUBLE,
+Origin STRING,
+Dest STRING,
+Distance INT,
+TaxiIn INT,
+TaxiOut INT,
+Cancelled INT,
+CancellationCode STRING,
+Diverted DOUBLE,
+CarrierDelay INT,
+WeatherDelay INT,
+NASDelay INT,
+SecurityDelay INT,
+LateAircraftDelay INT
+) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LOCATION 's3://airlinesdelaydatabucket/HiveSession/';
+
+
+
+LOAD DATA INPATH 's3://airlinesdelaydatabucket/DataSource/DelayedFlights.csv' OVERWRITE INTO TABLE delay_flights;
+
+# Hadoop - HiveQL
+
+SELECT Year, AVG((CarrierDelay / ArrDelay) * 100) AS delay_percentage FROM delay_flights GROUP BY Year;
+
+SELECT Year, AVG((NASDelay / ArrDelay) * 100) AS delay_percentage FROM delay_flights GROUP BY Year;
+
+SELECT Year, AVG((WeatherDelay / ArrDelay) * 100) AS delay_percentage FROM delay_flights GROUP BY Year;
+
+SELECT Year, AVG((LateAircraftDelay / ArrDelay) * 100) AS delay_percentage FROM delay_flights GROUP BY Year;
+
+SELECT Year, AVG((SecurityDelay / ArrDelay) * 100) AS delay_percentage FROM delay_flights GROUP BY Year;
